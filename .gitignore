@@ -5,3 +5,6 @@ __pycache__/
 data/raw/
 *.env
 .DS_Store
+# Processed data and model artifacts
+data/processed/
+models/
