@@ -7,4 +7,7 @@ data/raw/
 .DS_Store
 # Processed data and model artifacts
 data/processed/
-models/
+/models/
+mlruns/
+mlartifacts/
+mlflow.db
