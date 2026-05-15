@@ -11,3 +11,5 @@ data/processed/
 mlruns/
 mlartifacts/
 mlflow.db
+.pytest_cache/
+.coverage
