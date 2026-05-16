@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import joblib
 import mlflow
@@ -13,7 +14,7 @@ from sklearn.metrics import (
 )
 
 # Connect to MLflow server
-mlflow.set_tracking_uri("http://127.0.0.1:5000")
+mlflow.set_tracking_uri(os.environ.get('MLFLOW_TRACKING_URI', 'file:///opt/airflow/mlruns'))
 
 mlflow.set_experiment("churn-prediction-pipeline")
 
