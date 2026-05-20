@@ -13,3 +13,4 @@ mlartifacts/
 mlflow.db
 .pytest_cache/
 .coverage
+logs/

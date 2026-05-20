@@ -18,6 +18,20 @@ default_args = {
 
 project_dir = '/opt/airflow'
 
+def run_ingest_data():
+    env = os.environ.copy()
+    env['PYTHONPATH'] = project_dir
+    result = subprocess.run(
+        [sys.executable, os.path.join(project_dir, 'src', 'data', 'ingest.py')],
+        capture_output=True,
+        text=True,
+        cwd=project_dir,
+        env=env
+    )
+    print(result.stdout)
+    if result.returncode != 0:
+        raise Exception(result.stderr)
+    
 def run_validate_data():
     result = subprocess.run(
         [sys.executable, os.path.join(project_dir, 'src', 'data', 'validate_data.py')],
@@ -62,6 +76,11 @@ with DAG(
     catchup=False,
 ) as dag:
 
+    ingest_data = PythonOperator(
+        task_id='ingest_data',
+        python_callable=run_ingest_data,
+    )
+    
     validate_data = PythonOperator(
         task_id='validate_data',
         python_callable=run_validate_data,
@@ -77,6 +96,6 @@ with DAG(
         python_callable=run_train_model,
     )
 
-    validate_data >> feature_engineer >> train_model
+    ingest_data >> validate_data >> feature_engineer >> train_model
 
 

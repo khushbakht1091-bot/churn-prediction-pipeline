@@ -8,9 +8,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 USER airflow
 
+
 RUN pip install --no-cache-dir \
     great-expectations==1.17.1 \
     scikit-learn \
     mlflow \
     joblib \
-    pandas
+    pandas \
+    sqlalchemy \
+    psycopg2-binary

@@ -63,6 +63,11 @@ x-airflow-common:
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'true'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
+    CHURN_DB_USER: ${CHURN_DB_USER}
+    CHURN_DB_PASSWORD: ${CHURN_DB_PASSWORD}
+    CHURN_DB_HOST: ${CHURN_DB_HOST}
+    CHURN_DB_PORT: ${CHURN_DB_PORT}
+    CHURN_DB_NAME: ${CHURN_DB_NAME}
     # yamllint disable rule:line-length
     # Use simple http server on scheduler for health checks
     # See https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/logging-monitoring/check-health.html#scheduler-health-check-server
@@ -100,6 +105,7 @@ services:
       POSTGRES_DB: airflow
     volumes:
       - postgres-db-volume:/var/lib/postgresql/data
+      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "airflow"]
       interval: 10s
@@ -292,3 +298,4 @@ services:
 
 volumes:
   postgres-db-volume:
+
