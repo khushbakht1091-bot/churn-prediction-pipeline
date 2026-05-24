@@ -277,6 +277,11 @@ def main():
     print("Pipeline complete. All outputs saved.")
 
 
+def build_features(df=None):
+    """
+    Entry point for Airflow. Calls the full feature engineering pipeline.
+    """
+    main()
 
 if __name__ == "__main__":
     main()

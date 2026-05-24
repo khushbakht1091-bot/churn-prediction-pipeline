@@ -1,101 +1,98 @@
-from datetime import datetime, timedelta
+import os
+import sys
+from datetime import datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-import subprocess
-import sys
-import os
-
-default_args = {
-    'owner': 'khushbakht',
-    'depends_on_past': False,
-    'start_date': datetime(2024, 1, 1),
-    'email_on_failure': False,
-    'email_on_retry': False,
-    'retries': 1,
-    'retry_delay': timedelta(minutes=5),
-}
+from airflow.models import Variable
 
 
-project_dir = '/opt/airflow'
+def on_failure_callback(context):
+    task_id = context['task_instance'].task_id
+    dag_id = context['task_instance'].dag_id
+    execution_date = context['execution_date']
+    exception = context.get('exception')
+    print(f"Task FAILED: {task_id} in DAG: {dag_id}")
+    print(f"Execution date: {execution_date}")
+    print(f"Exception: {exception}")
 
-def run_ingest_data():
-    env = os.environ.copy()
-    env['PYTHONPATH'] = project_dir
-    result = subprocess.run(
-        [sys.executable, os.path.join(project_dir, 'src', 'data', 'ingest.py')],
-        capture_output=True,
-        text=True,
-        cwd=project_dir,
-        env=env
-    )
-    print(result.stdout)
-    if result.returncode != 0:
-        raise Exception(result.stderr)
-    
-def run_validate_data():
-    result = subprocess.run(
-        [sys.executable, os.path.join(project_dir, 'src', 'data', 'validate_data.py')],
-        capture_output=True,
-        text=True,
-        cwd=project_dir
-    )
-    print(result.stdout)
-    if result.returncode != 0:
-        raise Exception(result.stderr)
 
-def run_feature_engineer():
-    result = subprocess.run(
-        [sys.executable, os.path.join(project_dir, 'src', 'features', 'build_features.py')],
-        capture_output=True,
-        text=True,
-        cwd=project_dir
-    )
-    print(result.stdout)
-    if result.returncode != 0:
-        raise Exception(result.stderr)
+def ingest_data_task(**context):
+    sys.path.insert(0, '/opt/airflow')
+    csv_path = Variable.get("churn_csv_path")
+    from src.data.ingest import ingest_data
+    ingest_data(csv_path)
 
-def run_train_model():
-    env = os.environ.copy()
-    env['MLFLOW_TRACKING_URI'] = 'file:///opt/airflow/mlruns'
-    result = subprocess.run(
-        [sys.executable, os.path.join(project_dir, 'src', 'models', 'train_model.py')],
-        capture_output=True,
-        text=True,
-        cwd=project_dir,
-        env=env
-    )
-    print(result.stdout)
-    if result.returncode != 0:
-        raise Exception(result.stderr)
-    
+
+def validate_data_task(**context):
+    sys.path.insert(0, '/opt/airflow')
+    csv_path = Variable.get("churn_csv_path")
+    import pandas as pd
+    from src.data.validate_data import validate_data
+    df = pd.read_csv(csv_path)
+    validate_data(df)
+
+
+def feature_engineer_task(**context):
+    sys.path.insert(0, '/opt/airflow')
+    csv_path = Variable.get("churn_csv_path")
+    import pandas as pd
+    from src.features.build_features import build_features
+    df = pd.read_csv(csv_path)
+    build_features(df)
+
+
+def train_model_task(**context):
+    sys.path.insert(0, '/opt/airflow')
+    os.environ['MLFLOW_TRACKING_URI'] = 'file:///opt/airflow/mlruns'
+    from src.models.train_model import train_model
+    run_id, artifact_path = train_model()
+    context['ti'].xcom_push(key='run_id', value=run_id)
+    context['ti'].xcom_push(key='artifact_path', value=artifact_path)
+
+
+def register_model_task(**context):
+    sys.path.insert(0, '/opt/airflow')
+    os.environ['MLFLOW_TRACKING_URI'] = 'file:///opt/airflow/mlruns'
+    run_id = context['ti'].xcom_pull(task_ids='train_model', key='run_id')
+    artifact_path = context['ti'].xcom_pull(task_ids='train_model', key='artifact_path')
+    from src.models.model_registry import register_model
+    register_model(run_id, artifact_path)
+
+
 with DAG(
-    'churn_prediction_pipeline',
-    default_args=default_args,
-    description='Automated churn prediction pipeline',
-    schedule_interval=None,
+    dag_id='churn_pipeline',
+    start_date=datetime(2024, 1, 1),
+    schedule_interval='@weekly',
     catchup=False,
+    default_args={
+        'on_failure_callback': on_failure_callback,
+    },
 ) as dag:
-
-    ingest_data = PythonOperator(
-        task_id='ingest_data',
-        python_callable=run_ingest_data,
-    )
     
-    validate_data = PythonOperator(
+
+    ingest = PythonOperator(
+        task_id='ingest_data',
+        python_callable=ingest_data_task,
+    )
+
+    validate = PythonOperator(
         task_id='validate_data',
-        python_callable=run_validate_data,
+        python_callable=validate_data_task,
     )
 
-    feature_engineer = PythonOperator(
+    engineer = PythonOperator(
         task_id='feature_engineer',
-        python_callable=run_feature_engineer,
+        python_callable=feature_engineer_task,
     )
 
-    train_model = PythonOperator(
+    train = PythonOperator(
         task_id='train_model',
-        python_callable=run_train_model,
+        python_callable=train_model_task,
     )
 
-    ingest_data >> validate_data >> feature_engineer >> train_model
+    register = PythonOperator(
+        task_id='register_model',
+        python_callable=register_model_task,
+    )
 
-
+    ingest >> validate >> engineer >> train >> register
