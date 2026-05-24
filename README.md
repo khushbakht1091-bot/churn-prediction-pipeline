@@ -8,3 +8,6 @@ python -m venv venv
 source venv/Scripts/activate
 pip install -r requirements.txt
 '''
+## Pipeline
+
+![DAG Graph](docs/dag_pipeline.png)
