@@ -59,3 +59,56 @@ Interactive docs: http://127.0.0.1:8000/docs
   "prediction": "High Risk"
 }
 ```
+
+## Running the Full Stack
+
+All services (FastAPI, MLflow, Airflow, PostgreSQL, Redis) are orchestrated with Docker Compose.
+
+### Prerequisites
+
+- Docker Desktop running with WSL2 backend
+- At least 4GB of memory allocated to Docker
+
+### Start everything
+
+```bash
+docker-compose up --build
+```
+
+On first run this builds the FastAPI image and pulls all required images. Subsequent runs are faster:
+
+```bash
+docker-compose up
+```
+
+### Services
+
+| Service | URL | Description |
+|---|---|---|
+| FastAPI | http://localhost:8000 | Churn prediction API |
+| MLflow | http://localhost:5000 | Experiment tracking and model registry |
+| Airflow | http://localhost:8080 | Pipeline orchestration (admin/admin) |
+
+### Verify the API is running
+
+```bash
+curl http://127.0.0.1:8000/health
+```
+
+Expected response:
+
+```json
+{"status":"ok","model":"churn-best-model","stage":"Production"}
+```
+
+### Stop everything
+
+```bash
+docker-compose down
+```
+
+To also remove volumes (resets all data):
+
+```bash
+docker-compose down -v
+```
