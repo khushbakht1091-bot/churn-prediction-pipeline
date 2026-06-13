@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environment
+venv/
+
+# ML artifacts — these belong in volumes, not images
+mlruns/
+mlartifacts/
+models/
+
+# Data
+data/processed/
+data/external/
+
+# Development and testing
+.env
+notebooks/
+tests/
+
+# Version control
+.git/
+.gitignore
+
+# Docker files themselves (no need to copy into image)
+Dockerfile
+docker-compose.yaml
+.dockerignore
+
+# OS noise
+.DS_Store
+Thumbs.db

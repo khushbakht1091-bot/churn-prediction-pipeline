@@ -42,15 +42,18 @@ def load_production_model(model_name=MODEL_NAME):
     """
     Loads whichever model version is currently in Production.
     """
-    mlflow.set_tracking_uri(os.environ.get('MLFLOW_TRACKING_URI', 'file:///opt/airflow/mlruns'))
-
     tracking_uri = os.environ.get('MLFLOW_TRACKING_URI', 'file:///opt/airflow/mlruns')
+    mlflow.set_tracking_uri(tracking_uri)
 
-    if tracking_uri.startswith('file:///opt/airflow'):
+    if tracking_uri.startswith('http'):
+        # Running against a real MLflow tracking server (Docker or remote)
+        model_uri = f"models:/{model_name}/Production"
+    elif tracking_uri.startswith('file:///opt/airflow'):
+        # Running inside Airflow Docker container with local file tracking
         model_uri = f"models:/{model_name}/Production"
     else:
-        clean_path = tracking_uri.replace('file:///', '')
         # Temporary local workaround — experiment ID and model ID are specific to this mlruns folder
+        clean_path = tracking_uri.replace('file:///', '')
         model_uri = f"file:///{clean_path}/649802386125204412/models/m-bc16463d691d47c6b47e388cc6fde96d/artifacts"
 
     model = mlflow.sklearn.load_model(model_uri)

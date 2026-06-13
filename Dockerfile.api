@@ -1,0 +1,39 @@
+# Stage 1: Builder 
+FROM python:3.11-slim AS builder
+
+# Install build tools needed to compile certain Python packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory inside this stage
+WORKDIR /app
+
+# Copy requirements first — Docker caches this layer
+# If requirements.txt hasn't changed, pip install is skipped on rebuild
+COPY requirements.txt .
+
+# Install all dependencies into a specific folder we can copy later
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+
+# Stage 2: Runtime
+FROM python:3.11-slim AS runtime
+
+# Copy installed packages from the builder stage — nothing else
+COPY --from=builder /install /usr/local
+
+# Set working directory
+WORKDIR /app
+
+# Copy application source code
+COPY src/ ./src/
+
+# Tell Python where to find our modules
+ENV PYTHONPATH=/app
+
+# Expose the port uvicorn will listen on
+EXPOSE 8000
+
+# Start the API server
+CMD ["python", "-m", "uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
