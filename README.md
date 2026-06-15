@@ -2,6 +2,30 @@
 
 An end-to-end ML pipeline to predict customer churn.
 
+## Architecture
+
+```mermaid
+graph TD
+    A[Raw CSV Data] --> B[(PostgreSQL\nchurn_db)]
+    B --> C[Airflow DAG]
+    C --> D[Data Validation\nGreat Expectations]
+    D --> E[Feature Engineering\nscikit-learn Pipeline]
+    E --> F[Model Training\nLogistic Regression]
+    F --> G[(MLflow Registry\nchurn-best-model)]
+    G --> H[FastAPI\nPrediction Service]
+    H --> I[POST /predict\nChurn Probability]
+
+    style A fill:#f0f0f0
+    style B fill:#336791,color:#fff
+    style C fill:#017CEE,color:#fff
+    style D fill:#ff6b35,color:#fff
+    style E fill:#f7931e,color:#fff
+    style F fill:#4caf50,color:#fff
+    style G fill:#0194e2,color:#fff
+    style H fill:#009688,color:#fff
+    style I fill:#f0f0f0
+```
+
 ## Setup 
 '''bash
 python -m venv venv

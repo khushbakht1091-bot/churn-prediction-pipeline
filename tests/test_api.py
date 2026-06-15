@@ -1,15 +1,22 @@
 import os
-os.environ["MLFLOW_TRACKING_URI"] = "file:///C:/Users/hp/Desktop/churn-prediction-pipeline/mlruns"
-
 import pytest
+import numpy as np
+from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient
 from src.api.main import app
 
 
 @pytest.fixture(scope="module")
 def client():
-    with TestClient(app) as c:
-        yield c
+    mock_model = MagicMock()
+    mock_model.predict_proba.return_value = np.array([[0.4, 0.6]])
+    mock_preprocessor = MagicMock()
+    mock_preprocessor.transform.return_value = np.zeros((1, 10))
+
+    with patch("src.api.main.load_production_model", return_value=mock_model), \
+         patch("src.api.main.joblib.load", return_value=mock_preprocessor):
+        with TestClient(app) as c:
+            yield c
 
 
 VALID_CUSTOMER = {
