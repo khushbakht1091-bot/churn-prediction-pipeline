@@ -11,3 +11,6 @@ great-expectations==1.17.1
 sqlalchemy
 psycopg2-binary
 requests
+pytest==9.0.3
+pytest-cov==7.1.0
+python-dotenv
