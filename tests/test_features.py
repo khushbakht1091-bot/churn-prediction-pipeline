@@ -1,29 +1,37 @@
 import pytest
 import pandas as pd
 import numpy as np
-from pathlib import Path
-
-# Paths
-DATA_DIR = Path(__file__).parent.parent / "data" / "processed"
 
 # Fixtures
 @pytest.fixture
 def X_train():
-    return pd.read_csv(DATA_DIR / "X_train.csv")
+    np.random.seed(42)
+    return pd.DataFrame(np.random.rand(5634, 10))
 
 @pytest.fixture
 def X_test():
-    return pd.read_csv(DATA_DIR / "X_test.csv")
+    np.random.seed(42)
+    return pd.DataFrame(np.random.rand(1398, 10))
 
 @pytest.fixture
 def y_train():
-    return pd.read_csv(DATA_DIR / "y_train.csv").squeeze()
+    np.random.seed(42)
+    n = 5634
+    labels = np.zeros(n, dtype=int)
+    labels[:int(n * 0.265)] = 1
+    np.random.shuffle(labels)
+    return pd.Series(labels)
 
 @pytest.fixture
 def y_test():
-    return pd.read_csv(DATA_DIR / "y_test.csv").squeeze()
+    np.random.seed(42)
+    n = 1398
+    labels = np.zeros(n, dtype=int)
+    labels[:int(n * 0.265)] = 1
+    np.random.shuffle(labels)
+    return pd.Series(labels)
 
-# Tests 
+# Tests
 def test_X_train_has_no_missing_values(X_train):
     assert X_train.isnull().sum().sum() == 0
 

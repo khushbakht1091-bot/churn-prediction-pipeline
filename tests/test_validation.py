@@ -1,26 +1,33 @@
 import pytest
 import pandas as pd
-from pathlib import Path
 from src.data.validate_data import validate_data
-
-# Paths
-ROOT = Path(__file__).resolve().parent.parent
-DATA_PATH = ROOT / "data" / "raw" / "telco_churn_cleaned.csv"
 
 # Fixtures
 @pytest.fixture
 def good_data():
-    return pd.read_csv(DATA_PATH)
+    return pd.DataFrame({
+        "customerID":      ["001", "002", "003"],
+        "tenure":          [12, 24, 6],
+        "MonthlyCharges":  [50.0, 75.0, 30.0],
+        "Contract":        ["Month-to-month", "One year", "Two year"],
+        "Churn":           ["Yes", "No", "No"],
+        "gender":          ["Male", "Female", "Male"],
+        "InternetService": ["DSL", "Fiber optic", "No"],
+    })
 
 @pytest.fixture
 def bad_data():
-    df = pd.read_csv(DATA_PATH).copy()
-    df.loc[0, "tenure"] = -99
-    df.loc[1, "Contract"] = "Weekly"
-    return df
+    return pd.DataFrame({
+        "customerID":      ["001", "002", "003"],
+        "tenure":          [-99, 24, 6],
+        "MonthlyCharges":  [50.0, 75.0, 30.0],
+        "Contract":        ["Month-to-month", "Weekly", "Two year"],
+        "Churn":           ["Yes", "No", "No"],
+        "gender":          ["Male", "Female", "Male"],
+        "InternetService": ["DSL", "Fiber optic", "No"],
+    })
 
-
-# Tests 
+# Tests
 def test_validation_passes_on_good_data(good_data):
     try:
         validate_data(good_data)
