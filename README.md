@@ -1,3 +1,4 @@
+![CI](https://github.com/khushbakht1091-bot/churn-prediction-pipeline/actions/workflows/ci.yml/badge.svg)
 # Churn Prediction Pipeline
 
 An end-to-end ML pipeline to predict customer churn.
