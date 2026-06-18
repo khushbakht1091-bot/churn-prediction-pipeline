@@ -137,3 +137,16 @@ To also remove volumes (resets all data):
 ```bash
 docker-compose down -v
 ```
+
+## Docker Image
+
+The FastAPI prediction API is automatically built and pushed to Docker Hub on every merge to main.
+
+**Image:** `khushbakht91/churn-api`
+
+Pull and run the latest image:
+
+```bash
+docker pull khushbakht91/churn-api:latest
+docker run -p 8000:8000 khushbakht91/churn-api:latest
+```
