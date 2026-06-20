@@ -37,6 +37,18 @@ pip install -r requirements.txt
 
 ![DAG Graph](docs/dag_pipeline.png)
 
+## Automated Retraining Pipeline
+
+The retraining DAG (`dags/retrain_dag.py`) runs on a weekly schedule and implements the **champion/challenger pattern**:
+
+1. `get_champion_auc` — queries MLflow registry for the current production model AUC
+2. `retrain_model` — trains a fresh model on the full dataset
+3. `compare_and_promote` — promotes the new model only if it outperforms the champion
+
+All retraining runs are tagged in MLflow with `champion_auc`, `challenger_auc`, and `promotion_decision` for full audit trail.
+
+![Retraining DAG Success](docs/retrain_dag_success.png)
+
 ## REST API
 
 ### Start the API server
