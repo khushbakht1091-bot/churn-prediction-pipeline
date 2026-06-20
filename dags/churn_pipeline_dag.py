@@ -1,4 +1,3 @@
-import os
 import sys
 from datetime import datetime
 from airflow import DAG
@@ -43,7 +42,6 @@ def feature_engineer_task(**context):
 
 def train_model_task(**context):
     sys.path.insert(0, '/opt/airflow')
-    os.environ['MLFLOW_TRACKING_URI'] = 'file:///opt/airflow/mlruns'
     from src.models.train_model import train_model
     run_id, artifact_path = train_model()
     context['ti'].xcom_push(key='run_id', value=run_id)
@@ -52,7 +50,6 @@ def train_model_task(**context):
 
 def register_model_task(**context):
     sys.path.insert(0, '/opt/airflow')
-    os.environ['MLFLOW_TRACKING_URI'] = 'file:///opt/airflow/mlruns'
     run_id = context['ti'].xcom_pull(task_ids='train_model', key='run_id')
     artifact_path = context['ti'].xcom_pull(task_ids='train_model', key='artifact_path')
     from src.models.model_registry import register_model
@@ -68,7 +65,6 @@ with DAG(
         'on_failure_callback': on_failure_callback,
     },
 ) as dag:
-    
 
     ingest = PythonOperator(
         task_id='ingest_data',
