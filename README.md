@@ -96,6 +96,34 @@ Interactive docs: http://127.0.0.1:8000/docs
   "prediction": "High Risk"
 }
 ```
+## Load Testing Results
+
+Load tested the `/predict` endpoint using Locust with 50 concurrent users over 60 seconds.
+
+**Test configuration:**
+- Tool: Locust 2.44.4
+- Users: 50 concurrent
+- Spawn rate: 5 users/second
+- Duration: 60 seconds
+- Target: `http://localhost:8000/predict`
+
+**Results:**
+
+| Metric | Value |
+|---|---|
+| Total Requests | 1,288 |
+| Failure Rate | 0% |
+| Requests Per Second | 21.83 |
+| Median Latency (p50) | 77ms |
+| p75 Latency | 130ms |
+| p95 Latency | 330ms |
+| p99 Latency | 2,200ms |
+| Min Latency | 15ms |
+| Max Latency | 2,400ms |
+
+**Analysis:** The API handles 50 concurrent users with zero failures at ~22 RPS. Median latency of 77ms reflects scikit-learn pipeline inference time. The p99 spike to 2,200ms is expected tail latency under load — requests queuing when the thread pool is fully occupied during peak concurrency.
+
+![Load Test Results](docs/load_test_results.png)
 
 ## Running the Full Stack
 
