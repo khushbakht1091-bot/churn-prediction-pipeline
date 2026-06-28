@@ -1,7 +1,12 @@
 ![CI](https://github.com/khushbakht1091-bot/churn-prediction-pipeline/actions/workflows/ci.yml/badge.svg)
 # Churn Prediction Pipeline
 
-An end-to-end ML pipeline to predict customer churn.
+Customer churn — when subscribers cancel their service — costs telecom companies 
+significant revenue. Acquiring a new customer costs 5–25x more than retaining an 
+existing one. This project builds a production-grade ML pipeline that identifies 
+high-risk customers before they churn, enabling proactive retention interventions.
+
+Built on the IBM Telco Customer Churn dataset (7,032 customers, 21 features).
 
 ## Architecture
 
