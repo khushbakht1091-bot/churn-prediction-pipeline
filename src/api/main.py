@@ -1,6 +1,8 @@
 import sys
 import os
 import joblib
+from prometheus_fastapi_instrumentator import Instrumentator
+from prometheus_client import Histogram, Counter
 from typing import Optional
 from sklearn.pipeline import Pipeline
 
@@ -24,6 +26,18 @@ logger = logging.getLogger(__name__)
 
 model: Optional[object] = None
 preprocessor: Optional[Pipeline] = None
+
+PREDICTION_CONFIDENCE = Histogram(
+    "prediction_confidence_score",
+    "Distribution of churn probability scores returned by the model",
+    buckets=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+)
+
+CHURN_POSITIVE_PREDICTIONS = Counter(
+    "churn_positive_predictions",
+    "Total number of High Risk churn predictions made"
+)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -52,7 +66,8 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
-
+Instrumentator().instrument(app).expose(app)
+                                         
 class CustomerFeatures(BaseModel):
     """
     Pydantic model representing the input features for a single customer.
@@ -189,6 +204,11 @@ def predict(customer: CustomerFeatures):
         probability = model.predict_proba(input_transformed)[0][1]
 
         prediction = "High Risk" if probability >= 0.5 else "Low Risk"
+        
+        PREDICTION_CONFIDENCE.observe(probability)
+
+        if prediction == "High Risk":
+            CHURN_POSITIVE_PREDICTIONS.inc()
 
         logger.info("Prediction: probability=%.4f, result=%s", probability, prediction)
 
